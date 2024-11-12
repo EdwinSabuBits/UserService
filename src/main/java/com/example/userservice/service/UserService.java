@@ -5,6 +5,7 @@ import com.example.userservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +32,14 @@ public class UserService {
         user.setName(userDetails.getName());
         user.setEmail(userDetails.getEmail());
         user.setPassword(userDetails.getPassword());
+        user.setGender(userDetails.getGender());
+        user.setPhoneNumber(userDetails.getPhoneNumber());
+        user.setAddress(userDetails.getAddress());
+        user.setCity(userDetails.getCity());
+        user.setState(userDetails.getState());
+        user.setPostalCode(userDetails.getPostalCode());
+        user.setCountry(userDetails.getCountry());
+        user.setLastUpdated(new Date());
         return userRepository.save(user);
     }
 

@@ -10,16 +10,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Service
 public class AuthenticationService {
-
-    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -36,21 +32,14 @@ public class AuthenticationService {
     private Set<String> invalidatedTokens = new HashSet<>();
 
     public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
-        logger.info("Attempting to authenticate user with email: {}", authenticationRequest.getEmail());
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword())
-            );
-            logger.info("Authentication successful for user with email: {}", authenticationRequest.getEmail());
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword())
+        );
 
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
-            final String jwtToken = jwtUtil.generateToken(userDetails.getUsername());
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
+        final String jwtToken = jwtUtil.generateToken(userDetails.getUsername());
 
-            return new AuthenticationResponse(jwtToken);
-        } catch (Exception e) {
-            logger.error("Authentication failed for user with email: {}", authenticationRequest.getEmail(), e);
-            throw e;
-        }
+        return new AuthenticationResponse(jwtToken);
     }
 
     public void logout(String token) {

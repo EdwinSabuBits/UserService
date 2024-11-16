@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List; // Add this import
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -58,19 +58,38 @@ public class UserService {
 
         if (existingUserOptional.isPresent()) {
             User existingUser = existingUserOptional.get();
-            existingUser.setName(user.getName());
-            existingUser.setEmail(user.getEmail());
-            if (!user.getPassword().equals(existingUser.getPassword())) {
+
+            if (user.getName() != null) {
+                existingUser.setName(user.getName());
+            }
+            if (user.getEmail() != null && !user.getEmail().equals(existingUser.getEmail())) {
+                // Additional validation for email update
+                existingUser.setEmail(user.getEmail());
+            }
+            if (user.getPassword() != null && !passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
                 existingUser.setPassword(passwordEncoder.encode(user.getPassword())); // Hash the password before saving
             }
-            existingUser.setAddress(user.getAddress());
-            existingUser.setCity(user.getCity());
-            existingUser.setCountry(user.getCountry());
-            existingUser.setGender(user.getGender());
-            existingUser.setPhoneNumber(user.getPhoneNumber());
-            existingUser.setPostalCode(user.getPostalCode());
-            existingUser.setState(user.getState());
-            // Update other fields as necessary
+            if (user.getAddress() != null) {
+                existingUser.setAddress(user.getAddress());
+            }
+            if (user.getCity() != null) {
+                existingUser.setCity(user.getCity());
+            }
+            if (user.getCountry() != null) {
+                existingUser.setCountry(user.getCountry());
+            }
+            if (user.getGender() != null) {
+                existingUser.setGender(user.getGender());
+            }
+            if (user.getPhoneNumber() != null) {
+                existingUser.setPhoneNumber(user.getPhoneNumber());
+            }
+            if (user.getPostalCode() != null) {
+                existingUser.setPostalCode(user.getPostalCode());
+            }
+            if (user.getState() != null) {
+                existingUser.setState(user.getState());
+            }
             User updatedUser = userRepository.save(existingUser);
             logger.info("User updated successfully with id: {}", id);
             return updatedUser;

@@ -1,17 +1,19 @@
 package com.example.userservice.model;
 
 public class AuthenticationResponse {
-    private String jwtToken;
+    private final String jwt;
+    private final String username;
 
-    public AuthenticationResponse(String jwtToken) {
-        this.jwtToken = jwtToken;
+    public AuthenticationResponse(String jwt, String username) {
+        this.jwt = jwt;
+        this.username = username;
     }
 
-    public String getJwtToken() {
-        return jwtToken;
+    public String getJwt() {
+        return jwt;
     }
 
-    public void setJwtToken(String jwtToken) {
-        this.jwtToken = jwtToken;
+    public String getUsername() {
+        return username;
     }
 }

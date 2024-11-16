@@ -2,51 +2,51 @@ package com.example.userservice.service;
 
 import com.example.userservice.model.AuthenticationRequest;
 import com.example.userservice.model.AuthenticationResponse;
-import com.example.userservice.repository.UserRepository;
-import com.example.userservice.security.JwtUtil;
+import com.example.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class AuthenticationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
     @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
-    private UserRepository userRepository;
+    private CustomUserDetailsService userDetailsService;
 
     @Autowired
     private JwtUtil jwtUtil;
 
-    private Set<String> invalidatedTokens = new HashSet<>();
+    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) throws Exception {
+        try {
+            logger.info("Authenticating user: {}", authenticationRequest.getUsername());
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
+            );
 
-    public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword())
-        );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+            final String jwt = jwtUtil.generateToken(userDetails.getUsername());
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
-        final String jwtToken = jwtUtil.generateToken(userDetails.getUsername());
-
-        return new AuthenticationResponse(jwtToken);
-    }
-
-    public void logout(String token) {
-        invalidatedTokens.add(token);
-    }
-
-    public boolean isTokenInvalidated(String token) {
-        return invalidatedTokens.contains(token);
+            logger.info("Authentication successful for user: {}", authenticationRequest.getUsername());
+            return new AuthenticationResponse(jwt, userDetails.getUsername());
+        } catch (BadCredentialsException e) {
+            logger.error("Authentication failed for user: {}", authenticationRequest.getUsername(), e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("An error occurred during authentication for user: {}", authenticationRequest.getUsername(), e);
+            throw e;
+        }
     }
 }

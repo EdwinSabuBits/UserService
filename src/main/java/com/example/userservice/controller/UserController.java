@@ -2,11 +2,9 @@ package com.example.userservice.controller;
 
 import com.example.userservice.model.User;
 import com.example.userservice.service.UserService;
-import com.example.userservice.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,9 +15,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     @PostMapping
     public User createUser(@RequestBody User user) {
@@ -32,32 +27,25 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        String email = getEmailFromSecurityContext();
-        return userService.getUserById(id, email)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(403).build()); // Return 403 Forbidden if unauthorized
+    public User getUserById(@PathVariable Long id) {
+        String loggedInEmail = getLoggedInEmail();
+        return userService.getUserById(id, loggedInEmail).orElse(null);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        String email = getEmailFromSecurityContext();
-        return ResponseEntity.ok(userService.updateUser(id, user, email));
+    public User updateUser(@PathVariable Long id, @RequestBody User user) {
+        String loggedInEmail = getLoggedInEmail();
+        return userService.updateUser(id, user, loggedInEmail);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        String email = getEmailFromSecurityContext();
-        userService.deleteUser(id, email);
-        return ResponseEntity.noContent().build();
+    public void deleteUser(@PathVariable Long id) {
+        String loggedInEmail = getLoggedInEmail();
+        userService.deleteUser(id, loggedInEmail);
     }
 
-    private String getEmailFromSecurityContext() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else {
-            return principal.toString();
-        }
+    private String getLoggedInEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();  // Assuming the email is set as the principal (username)
     }
 }

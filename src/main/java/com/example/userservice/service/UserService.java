@@ -2,6 +2,7 @@ package com.example.userservice.service;
 
 import com.example.userservice.model.User;
 import com.example.userservice.repository.UserRepository;
+import com.example.userservice.service.BlacklistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +24,9 @@ public class UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private BlacklistService blacklistService;
 
     public User createUser(User user) {
         logger.info("Creating user with email: {}", user.getEmail());
@@ -108,5 +112,8 @@ public class UserService {
                             logger.error("User not found or unauthorized for id: {}", id);
                             throw new UsernameNotFoundException("User not found or unauthorized for id: " + id);
                         });
+    }
+
+    public void logoutUser(String jwt) { blacklistService.blacklistToken(jwt);
     }
 }

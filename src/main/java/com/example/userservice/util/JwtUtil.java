@@ -1,4 +1,4 @@
-package com.example.userservice.security;
+package com.example.userservice.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -6,15 +6,21 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    private Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+
+    private Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -30,7 +36,7 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
     private Boolean isTokenExpired(String token) {
@@ -38,12 +44,14 @@ public class JwtUtil {
     }
 
     public String generateToken(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, username);
+    }
+
+    private String createToken(Map<String, Object> claims, String subject) {
+        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-                .signWith(secretKey)
-                .compact();
+                .signWith(key).compact();
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {

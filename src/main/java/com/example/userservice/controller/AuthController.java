@@ -4,6 +4,7 @@ import com.example.userservice.model.AuthenticationRequest;
 import com.example.userservice.model.AuthenticationResponse;
 import com.example.userservice.service.AuthenticationService;
 import com.example.userservice.service.BlacklistService;
+import com.example.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,12 +14,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RestController
+@RequestMapping("/api")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     private BlacklistService blacklistService;

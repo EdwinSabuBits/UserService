@@ -18,7 +18,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -41,9 +40,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         logger.info("Entering JwtTokenFilter for URI: {}", request.getRequestURI());
 
         final String path = request.getRequestURI();
-        if ("/authenticate".equals(path)) {
+        if ("/api/authenticate".equals(path) || "/api/logout".equals(path)) {
+            logger.info("Skipping filter for URI: {}", path);
             chain.doFilter(request, response);
-            logger.info("Exiting JwtTokenFilter for URI: {}", path);
             return;
         }
 
@@ -60,10 +59,17 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             logger.info("Extracted Username from JWT: {}", username);
         }
 
+        if (jwt != null && blacklistService.isTokenBlacklisted(jwt)) {
+            logger.info("JWT token is blacklisted");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("Token is blacklisted");
+            return;
+        }
+
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             logger.info("Username is not null and SecurityContext is empty");
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-            if (!blacklistService.isTokenBlacklisted(jwt) && jwtUtil.validateToken(jwt, userDetails)) {
+            if (jwtUtil.validateToken(jwt, userDetails)) {
                 logger.info("JWT token is valid");
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
@@ -72,7 +78,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
                 logger.info("JWT token is validated and SecurityContext is set");
             } else {
-                logger.info("JWT token is invalid or blacklisted");
+                logger.info("JWT token is invalid");
             }
         }
 

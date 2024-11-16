@@ -5,7 +5,6 @@ import com.example.userservice.model.AuthenticationResponse;
 import com.example.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,9 +40,6 @@ public class AuthenticationService {
 
             logger.info("Authentication successful for user: {}", authenticationRequest.getUsername());
             return new AuthenticationResponse(jwt, userDetails.getUsername());
-        } catch (BadCredentialsException e) {
-            logger.error("Authentication failed for user: {}", authenticationRequest.getUsername(), e);
-            throw e;
         } catch (Exception e) {
             logger.error("An error occurred during authentication for user: {}", authenticationRequest.getUsername(), e);
             throw e;

@@ -1,6 +1,7 @@
 package com.example.userservice.model;
 
 public class AuthenticationResponse {
+
     private final String jwt;
     private final String username;
 

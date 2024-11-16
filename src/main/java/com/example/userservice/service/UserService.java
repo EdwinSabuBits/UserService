@@ -114,6 +114,4 @@ public class UserService {
                         });
     }
 
-    public void logoutUser(String jwt) { blacklistService.blacklistToken(jwt);
-    }
 }

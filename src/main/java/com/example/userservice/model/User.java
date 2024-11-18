@@ -2,6 +2,9 @@ package com.example.userservice.model;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
@@ -22,6 +25,9 @@ public class User {
     private String country;
     private Date dateCreated;
     private Date lastUpdated;
+
+    @Transient
+    private List<Order> orders;
 
     // Getters and Setters
     public Long getId() {
@@ -126,6 +132,14 @@ public class User {
 
     public void setLastUpdated(Date lastUpdated) {
         this.lastUpdated = lastUpdated;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 
     @PrePersist

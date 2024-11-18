@@ -2,6 +2,7 @@ package com.example.userservice.controller;
 
 import com.example.userservice.model.User;
 import com.example.userservice.service.UserService;
+import com.example.userservice.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +17,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private OrderService orderService;
+
     @PostMapping
     public User createUser(@RequestBody User user) {
         return userService.createUser(user);
@@ -29,7 +33,11 @@ public class UserController {
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Long id) {
         String loggedInEmail = getLoggedInEmail();
-        return userService.getUserById(id, loggedInEmail).orElse(null);
+        User user = userService.getUserById(id, loggedInEmail).orElse(null);
+        if (user != null) {
+            user.setOrders(orderService.getOrdersByUserId(id));
+        }
+        return user;
     }
 
     @PutMapping("/{id}")
@@ -46,6 +54,6 @@ public class UserController {
 
     private String getLoggedInEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();  // Assuming the email is set as the principal (username)
+        return authentication.getName();
     }
 }

@@ -11,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/users")
@@ -57,16 +59,14 @@ public class UserController {
         userService.deleteUser(id, loggedInEmail);
     }
 
-    @PostMapping("/authstatus")
-    public boolean checkAuthStatus(@RequestBody AuthStatusRequest authStatusRequest) {
+    @GetMapping("/authstatus")
+    public Map<String, Boolean> checkAuthStatus(@RequestBody AuthStatusRequest authStatusRequest) {
         String token = authStatusRequest.getToken();
         Long userId = authStatusRequest.getUserId();
-
-        if (jwtUtil.validateToken(token, userService.loadUserById(userId))) {
-            return true;
-        } else {
-            return false;
-        }
+        boolean isValid = jwtUtil.validateToken(token, userService.loadUserById(userId));
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("authStatus", isValid);
+        return response;
     }
 
     private String getLoggedInEmail() {

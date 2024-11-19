@@ -20,7 +20,8 @@ public class JwtUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
-    private Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    // Generate a secure key
+    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -49,9 +50,13 @@ public class JwtUtil {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-                .signWith(key).compact();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                .signWith(key)
+                .compact();
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {

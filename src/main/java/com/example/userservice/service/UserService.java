@@ -2,17 +2,18 @@ package com.example.userservice.service;
 
 import com.example.userservice.model.User;
 import com.example.userservice.repository.UserRepository;
-import com.example.userservice.service.BlacklistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Service
 public class UserService {
@@ -24,9 +25,6 @@ public class UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-
-    @Autowired
-    private BlacklistService blacklistService;
 
     public User createUser(User user) {
         logger.info("Creating user with email: {}", user.getEmail());
@@ -114,4 +112,15 @@ public class UserService {
                         });
     }
 
+    public UserDetails loadUserById(Long userId) throws UsernameNotFoundException {
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new UsernameNotFoundException("User not found with ID: " + userId));
+
+        // Ensure the user has authorities
+        if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
+            user.setAuthorities(Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
+        }
+
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), user.getAuthorities());
+    }
 }

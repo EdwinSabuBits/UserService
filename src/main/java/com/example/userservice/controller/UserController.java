@@ -1,8 +1,10 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.AuthStatusRequest;
 import com.example.userservice.model.User;
-import com.example.userservice.service.UserService;
 import com.example.userservice.service.OrderService;
+import com.example.userservice.service.UserService;
+import com.example.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,9 @@ public class UserController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping
     public User createUser(@RequestBody User user) {
@@ -50,6 +55,18 @@ public class UserController {
     public void deleteUser(@PathVariable Long id) {
         String loggedInEmail = getLoggedInEmail();
         userService.deleteUser(id, loggedInEmail);
+    }
+
+    @PostMapping("/authstatus")
+    public boolean checkAuthStatus(@RequestBody AuthStatusRequest authStatusRequest) {
+        String token = authStatusRequest.getToken();
+        Long userId = authStatusRequest.getUserId();
+
+        if (jwtUtil.validateToken(token, userService.loadUserById(userId))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private String getLoggedInEmail() {

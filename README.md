@@ -12,6 +12,7 @@ A web application that manages user authentication and profile operations. Users
 - **Java** (JDK 8 or higher)
 - **Maven** (v3.6.0 or higher)
 - **MySQL** (or any other preferred relational database)
+- **Docker** (if using Docker for containerization)
 -  **Git**
 
 ## Installation
@@ -29,12 +30,16 @@ Set up your MySQL database and note the connection details.
 Create an application.properties file in the src/main/resources directory and add the following properties:
 ```bash
 spring.datasource.url=jdbc:mysql://localhost:3306/<your_database>
+spring.datasource.url=jdbc:mysql://host.docker.internal:3306/<your_database> # for docker run
 spring.datasource.username=<username>
 spring.datasource.password=<your_password>
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL5Dialect
+
+# service to service communication URL
+orderservice.url=http://localhost:9005/api/orders/user/
 ```
 
 ### 4. Build and Run the Server
@@ -42,6 +47,48 @@ Build the project using Maven and run it.
 ```bash
 mvn clean install
 mvn spring-boot:run
+```
+
+## Docker Setup
+### 1. Create a Docker Network
+Create a Docker network for communication between containers.
+```bash
+docker network create <network_name>
+```
+
+### 2. Dockerfile
+Ensure you have a Dockerfile in the root directory of your project:
+```dockerfile
+# Use an official JDK runtime as a parent image
+FROM openjdk:11-jdk-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the Maven build artifact (JAR file) into the container
+COPY target/user-service-1.0-SNAPSHOT.jar app.jar
+
+# Expose the port your application runs on
+EXPOSE 8080
+
+# Run the JAR file
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+### 3. Build Docker Images
+Build the Docker image for your user service.
+```bash
+docker build -t user-service:latest .
+```
+
+### 4. Run Docker Containers
+Run the order-service container and user-service container on the created Docker network.
+```bash
+# Run order-service container
+docker run --name order-service --network my-network -p 9005:9005 order-service:latest
+
+# Run user-service container
+docker run --name user-service --network my-network -p 8080:8080 user-service:latest
 ```
 
 ## API Endpoints
@@ -102,6 +149,15 @@ Authorization: Bearer <JWT_TOKEN>
 - **DELETE /api/users/{{user_id}}**: Delete a user
 ```http
 Authorization: Bearer <JWT_TOKEN>
+```
+
+- **GET /api/users/authstatus**: Get Authentication Status
+```json
+{
+    "token": "<token_to_check_auth_status>",
+    "userId": <id_of_user_to_get_auth_status>
+}
+
 ```
 
 ## Usage

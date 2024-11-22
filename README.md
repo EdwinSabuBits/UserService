@@ -169,5 +169,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 - Update and delete user profile.
 
+- Check authentication status
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/?form=MG0AV3)
